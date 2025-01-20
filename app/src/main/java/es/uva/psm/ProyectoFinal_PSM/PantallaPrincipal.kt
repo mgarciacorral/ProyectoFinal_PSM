@@ -1,48 +1,68 @@
 package es.uva.psm.ProyectoFinal_PSM
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardElevation
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SmallTopAppBar
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 @Composable
 fun PantallaPrincipal(navController: NavController, repositorio: RepositorioPeliculas) {
     var peliculas by remember { mutableStateOf<List<Pelicula>>(emptyList()) }
+    val searchQuery = remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
-        peliculas = repositorio.getPeliculas().results
+        CoroutineScope(Dispatchers.IO).launch {
+            peliculas = repositorio.getPeliculas().results
+        }
     }
 
     Scaffold(
         topBar = {
             BarraArriba()
         },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = {
+                    CoroutineScope(Dispatchers.IO).launch {
+                        peliculas = repositorio.getPeliculas().results
+                    }
+                },
+                containerColor = colorResource(id = R.color.app_bar_color)
+            ) {
+                Text("MÁS")
+            }
+        },
+        floatingActionButtonPosition = FabPosition.End
     ) { paddingValues ->
         Column(modifier = Modifier.padding(paddingValues)) {
+            TextField(
+                value = searchQuery.value,
+                onValueChange = {
+                    searchQuery.value = it
+                    CoroutineScope(Dispatchers.IO).launch {
+                        peliculas = if (it.isEmpty()) {
+                            repositorio.getPeliculas().results
+                        } else {
+                            repositorio.buscarPelicula(it).results
+                        }
+                    }
+                },
+                placeholder = { Text(text = "Buscar...") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp)
+            )
             LazyColumn {
                 peliculas.let { peliculasList ->
                     items(peliculasList) { pelicula ->
@@ -81,16 +101,11 @@ fun BarraArriba(
 ) {
     SmallTopAppBar(
         title = {
-            Text(
-                text = title,
-                color = colorResource(id = R.color.white),
-                modifier = Modifier
-                    .padding(start = 16.dp)
-                    .heightIn(max = 24.dp)
-            )
+            Text(text = title)
         },
         colors = TopAppBarDefaults.smallTopAppBarColors(
             containerColor = colorResource(id = R.color.app_bar_color)
-        )
+        ),
+        modifier = Modifier.height(56.dp)
     )
 }

@@ -9,6 +9,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query
+import kotlin.random.Random
 
 private val client = OkHttpClient.Builder().addInterceptor { chain ->
     val request: Request = chain.request().newBuilder()
@@ -31,7 +32,7 @@ interface ServicioAPIPelicula {
     suspend fun getPeliculas(
         @Query("api_key") apiKey: String = "a55354716963d8a44a2924f955c7cf2a",
         @Query("language") language: String = "es-ES",
-        @Query("page") pagina: Int = 1
+        @Query("page") pagina: Int = Random.nextInt(1, 20)
     ): ListaPeliculasRespuesta
 
     @GET("movie/{id}")
