@@ -89,7 +89,11 @@ fun PeliculaItem(pelicula: Pelicula, onClick: () -> Unit) {
                 text = pelicula.title,
                 fontWeight = FontWeight.ExtraBold
             )
-            Text(text = pelicula.overview ?: "")
+            Text(
+                text = pelicula.overview?.let {
+                    if (it.length > 80) it.take(85) + "..." else it
+                } ?: ""
+            )
         }
     }
 }
